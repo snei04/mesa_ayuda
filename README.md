@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # FocusIT - Sistema de Mesa de Ayuda Inteligente
 
 ## 📋 Descripción
@@ -329,3 +330,6 @@ Este proyecto está bajo la Licencia MIT - ver el archivo LICENSE para más deta
 ---
 
 **Desarrollado con ❤️ para ópticas modernas**
+=======
+# mesa_ayuda
+>>>>>>> 68f849cf8cc3483b0b0a8bfacf0067f293afca78
