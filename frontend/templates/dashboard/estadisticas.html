@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Estadísticas - FocusIT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">📊 Estadísticas del Sistema</h1>
+                    <p class="text-muted mb-0">Panel de control y métricas para técnicos</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary" onclick="location.reload()">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Actualizar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas Principales -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_tickets }}</h4>
+                            <p class="mb-0">Total Tickets</p>
+                        </div>
+                        <div class="opacity-75">
+                            <i class="bi bi-ticket display-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ tickets_abiertos }}</h4>
+                            <p class="mb-0">Tickets Abiertos</p>
+                        </div>
+                        <div class="opacity-75">
+                            <i class="bi bi-exclamation-circle display-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ ((total_tickets - tickets_abiertos) / total_tickets * 100) | round(1) if total_tickets > 0 else 0 }}%</h4>
+                            <p class="mb-0">Tasa Resolución</p>
+                        </div>
+                        <div class="opacity-75">
+                            <i class="bi bi-check-circle display-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ tecnicos_activos|length }}</h4>
+                            <p class="mb-0">Técnicos Activos</p>
+                        </div>
+                        <div class="opacity-75">
+                            <i class="bi bi-people display-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Gráfico de Estados -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-pie-chart me-2"></i>Tickets por Estado
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for estado, cantidad in tickets_por_estado %}
+                        <div class="col-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    {% if estado == 'nuevo' %}
+                                    <span class="badge bg-secondary">{{ cantidad }}</span>
+                                    {% elif estado == 'asignado_a_tecnico' %}
+                                    <span class="badge bg-info">{{ cantidad }}</span>
+                                    {% elif estado == 'en_proceso' %}
+                                    <span class="badge bg-warning">{{ cantidad }}</span>
+                                    {% elif estado == 'resuelto' %}
+                                    <span class="badge bg-success">{{ cantidad }}</span>
+                                    {% elif estado == 'cerrado' %}
+                                    <span class="badge bg-dark">{{ cantidad }}</span>
+                                    {% else %}
+                                    <span class="badge bg-light text-dark">{{ cantidad }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">
+                                        {% if estado == 'nuevo' %}Nuevos
+                                        {% elif estado == 'asignado_a_tecnico' %}Asignados
+                                        {% elif estado == 'en_proceso' %}En Proceso
+                                        {% elif estado == 'esperando_aprobacion' %}Esperando Aprobación
+                                        {% elif estado == 'esperando_respuesta_usuario' %}Esperando Usuario
+                                        {% elif estado == 'resuelto' %}Resueltos
+                                        {% elif estado == 'cerrado' %}Cerrados
+                                        {% else %}{{ estado.title() }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="progress mt-1" style="height: 6px;">
+                                        <div class="progress-bar 
+                                            {% if estado == 'nuevo' %}bg-secondary
+                                            {% elif estado == 'asignado_a_tecnico' %}bg-info
+                                            {% elif estado == 'en_proceso' %}bg-warning
+                                            {% elif estado == 'resuelto' %}bg-success
+                                            {% elif estado == 'cerrado' %}bg-dark
+                                            {% else %}bg-light
+                                            {% endif %}" 
+                                            style="width: {{ (cantidad / total_tickets * 100) if total_tickets > 0 else 0 }}%">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico de Categorías -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-bar-chart me-2"></i>Tickets por Categoría
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for categoria, cantidad in tickets_por_categoria %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-semibold">
+                                {% if categoria == 'problemas_tecnicos' %}
+                                <i class="bi bi-tools text-danger me-1"></i>Problemas Técnicos
+                                {% elif categoria == 'solicitudes_software' %}
+                                <i class="bi bi-download text-primary me-1"></i>Solicitudes Software
+                                {% elif categoria == 'permisos_accesos' %}
+                                <i class="bi bi-key text-warning me-1"></i>Permisos y Accesos
+                                {% elif categoria == 'consultas_generales' %}
+                                <i class="bi bi-question-circle text-info me-1"></i>Consultas Generales
+                                {% else %}
+                                <i class="bi bi-folder me-1"></i>{{ categoria.title() }}
+                                {% endif %}
+                            </span>
+                            <span class="badge bg-light text-dark">{{ cantidad }}</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar 
+                                {% if categoria == 'problemas_tecnicos' %}bg-danger
+                                {% elif categoria == 'solicitudes_software' %}bg-primary
+                                {% elif categoria == 'permisos_accesos' %}bg-warning
+                                {% elif categoria == 'consultas_generales' %}bg-info
+                                {% else %}bg-secondary
+                                {% endif %}" 
+                                style="width: {{ (cantidad / total_tickets * 100) if total_tickets > 0 else 0 }}%">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Técnicos Más Activos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-trophy me-2"></i>Técnicos Más Activos (Últimos 30 días)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if tecnicos_activos %}
+                    <div class="row">
+                        {% for tecnico in tecnicos_activos %}
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <div class="card bg-light h-100">
+                                <div class="card-body text-center">
+                                    <div class="mb-2">
+                                        <i class="bi bi-person-circle display-6 text-primary"></i>
+                                    </div>
+                                    <h6 class="card-title">{{ tecnico.nombre }}</h6>
+                                    <p class="card-text">
+                                        <span class="badge bg-primary">{{ tecnico.tickets_asignados }}</span>
+                                        <br><small class="text-muted">tickets</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-info-circle display-4 mb-3"></i>
+                        <p>No hay datos de técnicos disponibles</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-lightning me-2"></i>Acciones Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('tickets.lista') }}?estado=nuevo" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-inbox me-2"></i>Ver Tickets Nuevos
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('tickets.lista') }}?prioridad=critica" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-exclamation-triangle me-2"></i>Tickets Críticos
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('knowledge.crear') }}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-plus-circle me-2"></i>Crear Artículo
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('chatbot.test') }}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-robot me-2"></i>Probar Chatbot
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+
+.display-4 {
+    font-size: 2.5rem;
+}
+
+.badge {
+    font-size: 1rem;
+    padding: 0.5rem 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .card-body h4 {
+        font-size: 1.5rem;
+    }
+}
+</style>
+
+<script>
+// Auto-refresh cada 5 minutos
+setInterval(function() {
+    location.reload();
+}, 300000);
+
+// Tooltips para mejor UX
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

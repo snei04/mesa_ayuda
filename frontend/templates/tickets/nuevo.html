@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Ticket - FocusIT{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">Crear Nuevo Ticket</h2>
+                    <p class="text-muted mb-0">Describe tu problema y te ayudaremos a resolverlo</p>
+                </div>
+                <a href="{{ url_for('dashboard.home') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Volver
+                </a>
+            </div>
+
+            <!-- Options Card -->
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4">¿Cómo prefieres crear tu ticket?</h5>
+                    
+                    <div class="row">
+                        <!-- Flujo Guiado -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 border-primary">
+                                <div class="card-body text-center p-4">
+                                    <i class="bi bi-diagram-3 display-4 text-primary mb-3"></i>
+                                    <h5 class="card-title">Flujo Guiado</h5>
+                                    <p class="card-text text-muted mb-4">
+                                        Te guiamos paso a paso para identificar tu problema y buscar soluciones automáticamente.
+                                    </p>
+                                    <a href="{{ url_for('tickets.flujo_guiado') }}" class="btn btn-primary">
+                                        <i class="bi bi-arrow-right me-2"></i>Comenzar Flujo
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Formulario Directo -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 border-secondary">
+                                <div class="card-body text-center p-4">
+                                    <i class="bi bi-pencil-square display-4 text-secondary mb-3"></i>
+                                    <h5 class="card-title">Formulario Directo</h5>
+                                    <p class="card-text text-muted mb-4">
+                                        Si ya sabes exactamente qué necesitas, crea tu ticket directamente.
+                                    </p>
+                                    <button class="btn btn-secondary" onclick="showDirectForm()">
+                                        <i class="bi bi-pencil me-2"></i>Crear Directo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Direct Form (Hidden by default) -->
+            <div id="directForm" class="card shadow-sm mt-4" style="display: none;">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-pencil-square me-2"></i>Formulario Directo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('tickets.crear') }}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="categoria" class="form-label">Categoría *</label>
+                                <select class="form-select" id="categoria" name="categoria" required>
+                                    <option value="">Seleccionar categoría...</option>
+                                    {% for cat_key, cat_info in MAIN_CATEGORIES.items() %}
+                                    <option value="{{ cat_key }}">{{ cat_info.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="subcategoria" class="form-label">Subcategoría</label>
+                                <select class="form-select" id="subcategoria" name="subcategoria">
+                                    <option value="">Primero selecciona una categoría</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="titulo" class="form-label">Título del Problema *</label>
+                            <input type="text" class="form-control" id="titulo" name="titulo" 
+                                   placeholder="Describe brevemente tu problema" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción Detallada *</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="5" 
+                                      placeholder="Describe tu problema con el mayor detalle posible:&#10;• ¿Qué estabas haciendo cuando ocurrió?&#10;• ¿Qué mensaje de error aparece?&#10;• ¿Desde cuándo ocurre?" required></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="prioridad" class="form-label">Prioridad</label>
+                            <select class="form-select" id="prioridad" name="prioridad">
+                                <option value="baja">Baja - No es urgente</option>
+                                <option value="media" selected>Media - Necesito ayuda pronto</option>
+                                <option value="alta">Alta - Afecta mi trabajo</option>
+                                <option value="critica">Crítica - No puedo trabajar</option>
+                            </select>
+                        </div>
+
+                        <!-- Suggested Articles -->
+                        <div id="suggestedArticles" class="mb-4" style="display: none;">
+                            <div class="alert alert-info">
+                                <h6><i class="bi bi-lightbulb me-2"></i>Artículos que podrían ayudarte:</h6>
+                                <div id="articlesList"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary" onclick="hideDirectForm()">
+                                <i class="bi bi-arrow-left me-2"></i>Volver a Opciones
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Crear Ticket
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Subcategorías por categoría
+const subcategorias = {{ MAIN_CATEGORIES | tojson }};
+
+function showDirectForm() {
+    document.getElementById('directForm').style.display = 'block';
+    document.getElementById('directForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideDirectForm() {
+    document.getElementById('directForm').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const categoriaSelect = document.getElementById('categoria');
+    const subcategoriaSelect = document.getElementById('subcategoria');
+    const tituloInput = document.getElementById('titulo');
+    const descripcionInput = document.getElementById('descripcion');
+    
+    // Actualizar subcategorías cuando cambia la categoría
+    categoriaSelect.addEventListener('change', function() {
+        const categoria = this.value;
+        subcategoriaSelect.innerHTML = '<option value="">Seleccionar subcategoría...</option>';
+        
+        if (categoria && subcategorias[categoria] && subcategorias[categoria].subcategories) {
+            Object.entries(subcategorias[categoria].subcategories).forEach(([key, name]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = name;
+                subcategoriaSelect.appendChild(option);
+            });
+        }
+    });
+    
+    // Buscar artículos relacionados mientras el usuario escribe
+    let searchTimeout;
+    function searchArticles() {
+        const titulo = tituloInput.value.trim();
+        const categoria = categoriaSelect.value;
+        const subcategoria = subcategoriaSelect.value;
+        
+        if (titulo.length < 3) {
+            document.getElementById('suggestedArticles').style.display = 'none';
+            return;
+        }
+        
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const params = new URLSearchParams({
+                q: titulo,
+                categoria: categoria,
+                subcategoria: subcategoria
+            });
+            
+            fetch(`{{ url_for('tickets.buscar_articulos') }}?${params}`)
+                .then(response => response.json())
+                .then(articles => {
+                    if (articles.length > 0) {
+                        let html = '';
+                        articles.forEach(article => {
+                            html += `
+                                <div class="mb-2">
+                                    <a href="${article.url}" target="_blank" class="text-decoration-none">
+                                        <strong>${article.titulo}</strong>
+                                    </a>
+                                    <br>
+                                    <small class="text-muted">${article.contenido_preview}</small>
+                                </div>
+                            `;
+                        });
+                        
+                        document.getElementById('articlesList').innerHTML = html;
+                        document.getElementById('suggestedArticles').style.display = 'block';
+                    } else {
+                        document.getElementById('suggestedArticles').style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error buscando artículos:', error);
+                });
+        }, 500);
+    }
+    
+    tituloInput.addEventListener('input', searchArticles);
+    categoriaSelect.addEventListener('change', searchArticles);
+    subcategoriaSelect.addEventListener('change', searchArticles);
+});
+</script>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.border-primary {
+    border-color: #007bff !important;
+    border-width: 2px !important;
+}
+
+.border-secondary {
+    border-color: #6c757d !important;
+    border-width: 2px !important;
+}
+
+#directForm {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}

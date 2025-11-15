@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Tickets - FocusIT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                {% if current_user.es_tecnico %}
+                Gestión de Tickets
+                {% else %}
+                Mis Tickets
+                {% endif %}
+            </h2>
+            <p class="text-muted mb-0">
+                {% if current_user.es_tecnico %}
+                Administra todos los tickets del sistema
+                {% else %}
+                Revisa el estado de tus solicitudes de soporte
+                {% endif %}
+            </p>
+        </div>
+        <a href="{{ url_for('tickets.nuevo') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Nuevo Ticket
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select class="form-select" id="estado" name="estado">
+                        <option value="">Todos los estados</option>
+                        {% for estado in TICKET_STATES %}
+                        <option value="{{ estado }}" {% if estado_filtro == estado %}selected{% endif %}>
+                            {% if estado == 'nuevo' %}Nuevo
+                            {% elif estado == 'asignado_a_tecnico' %}Asignado a Técnico
+                            {% elif estado == 'en_proceso' %}En Proceso
+                            {% elif estado == 'esperando_aprobacion' %}Esperando Aprobación
+                            {% elif estado == 'esperando_respuesta_usuario' %}Esperando Respuesta del Usuario
+                            {% elif estado == 'resuelto' %}Resuelto
+                            {% elif estado == 'cerrado' %}Cerrado
+                            {% else %}{{ estado }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="categoria" class="form-label">Categoría</label>
+                    <select class="form-select" id="categoria" name="categoria">
+                        <option value="">Todas las categorías</option>
+                        {% for cat_key, cat_info in MAIN_CATEGORIES.items() %}
+                        <option value="{{ cat_key }}" {% if categoria_filtro == cat_key %}selected{% endif %}>
+                            {{ cat_info.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-funnel me-1"></i>Filtrar
+                    </button>
+                    <a href="{{ url_for('tickets.lista') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tickets List -->
+    <div class="card">
+        <div class="card-body">
+            {% if tickets.items %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Título</th>
+                            <th>Categoría</th>
+                            <th>Estado</th>
+                            <th>Prioridad</th>
+                            {% if current_user.es_tecnico %}
+                            <th>Usuario</th>
+                            <th>Técnico</th>
+                            {% endif %}
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in tickets.items %}
+                        <tr>
+                            <td>
+                                <strong>#{{ ticket.id }}</strong>
+                            </td>
+                            <td>
+                                <div>
+                                    <strong>{{ ticket.titulo }}</strong>
+                                    {% if ticket.origen == 'whatsapp' %}
+                                    <span class="badge bg-success ms-1">
+                                        <i class="bi bi-whatsapp"></i>
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">
+                                    {{ ticket.descripcion[:80] }}{% if ticket.descripcion|length > 80 %}...{% endif %}
+                                </small>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">
+                                    {{ MAIN_CATEGORIES[ticket.categoria].name if ticket.categoria in MAIN_CATEGORIES else ticket.categoria }}
+                                </span>
+                                {% if ticket.subcategoria %}
+                                <br><small class="text-muted">{{ ticket.subcategoria }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 
+                                    'success' if ticket.estado in ['resuelto', 'cerrado'] 
+                                    else 'warning' if ticket.estado in ['en_proceso', 'asignado_a_tecnico'] 
+                                    else 'danger' if ticket.estado == 'esperando_respuesta_usuario'
+                                    else 'secondary' 
+                                }}">
+                                    {{ ticket.get_estado_display() }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 
+                                    'danger' if ticket.prioridad == 'critica' 
+                                    else 'warning' if ticket.prioridad == 'alta' 
+                                    else 'info' if ticket.prioridad == 'media' 
+                                    else 'secondary' 
+                                }}">
+                                    {{ ticket.get_prioridad_display() }}
+                                </span>
+                            </td>
+                            {% if current_user.es_tecnico %}
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-circle me-2"></i>
+                                    <div>
+                                        <div>{{ ticket.usuario.nombre }}</div>
+                                        <small class="text-muted">{{ ticket.usuario.departamento }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if ticket.tecnico %}
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-gear me-2 text-primary"></i>
+                                    <div>{{ ticket.tecnico.nombre }}</div>
+                                </div>
+                                {% else %}
+                                <span class="text-muted">Sin asignar</span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                            <td>
+                                <div>{{ ticket.fecha_creacion.strftime('%d/%m/%Y') }}</div>
+                                <small class="text-muted">{{ ticket.fecha_creacion.strftime('%H:%M') }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ url_for('tickets.detalle', id=ticket.id) }}" 
+                                       class="btn btn-outline-primary" title="Ver detalles">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if current_user.es_tecnico and ticket.estado not in ['resuelto', 'cerrado'] %}
+                                    <button type="button" class="btn btn-outline-success" 
+                                            onclick="quickUpdate({{ ticket.id }}, 'en_proceso')" 
+                                            title="Marcar en proceso">
+                                        <i class="bi bi-play"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning" 
+                                            onclick="quickUpdate({{ ticket.id }}, 'resuelto')" 
+                                            title="Marcar como resuelto">
+                                        <i class="bi bi-check"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if tickets.pages > 1 %}
+            <nav aria-label="Paginación de tickets" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if tickets.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('tickets.lista', page=tickets.prev_num, estado=estado_filtro, categoria=categoria_filtro) }}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in tickets.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != tickets.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('tickets.lista', page=page_num, estado=estado_filtro, categoria=categoria_filtro) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if tickets.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('tickets.lista', page=tickets.next_num, estado=estado_filtro, categoria=categoria_filtro) }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted mb-4"></i>
+                <h4>No hay tickets</h4>
+                <p class="text-muted mb-4">
+                    {% if estado_filtro or categoria_filtro %}
+                    No se encontraron tickets con los filtros aplicados.
+                    {% else %}
+                    No tienes tickets creados aún.
+                    {% endif %}
+                </p>
+                {% if not estado_filtro and not categoria_filtro %}
+                <a href="{{ url_for('tickets.nuevo') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Crear tu primer ticket
+                </a>
+                {% else %}
+                <a href="{{ url_for('tickets.lista') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-x-circle me-2"></i>Limpiar filtros
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Quick Update Modal -->
+<div class="modal fade" id="quickUpdateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Actualizar Estado del Ticket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres cambiar el estado de este ticket?</p>
+                <div id="ticketInfo"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmUpdate">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTicketId = null;
+let currentNewState = null;
+
+function quickUpdate(ticketId, newState) {
+    currentTicketId = ticketId;
+    currentNewState = newState;
+    
+    const stateNames = {
+        'en_proceso': 'En Proceso',
+        'resuelto': 'Resuelto',
+        'cerrado': 'Cerrado'
+    };
+    
+    document.getElementById('ticketInfo').innerHTML = `
+        <strong>Ticket #${ticketId}</strong><br>
+        Nuevo estado: <span class="badge bg-primary">${stateNames[newState]}</span>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('quickUpdateModal'));
+    modal.show();
+}
+
+document.getElementById('confirmUpdate').addEventListener('click', function() {
+    if (currentTicketId && currentNewState) {
+        // Crear formulario temporal para enviar la actualización
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/tickets/${currentTicketId}/actualizar_estado`;
+        
+        const stateInput = document.createElement('input');
+        stateInput.type = 'hidden';
+        stateInput.name = 'estado';
+        stateInput.value = currentNewState;
+        
+        form.appendChild(stateInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+});
+
+// Auto-refresh cada 30 segundos si es técnico
+{% if current_user.es_tecnico %}
+setInterval(function() {
+    // Solo refrescar si no hay modales abiertos
+    if (!document.querySelector('.modal.show')) {
+        location.reload();
+    }
+}, 30000);
+{% endif %}
+</script>
+
+<style>
+.table-responsive {
+    border-radius: 0.375rem;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.pagination {
+    margin-bottom: 0;
+}
+
+.page-link {
+    color: #007bff;
+}
+
+.page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+</style>
+{% endblock %}

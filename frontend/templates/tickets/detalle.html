@@ -1,0 +1,380 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket #{{ ticket.id }} - FocusIT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Ticket #{{ ticket.id }}</h2>
+            <p class="text-muted mb-0">{{ ticket.titulo }}</p>
+        </div>
+        <a href="{{ url_for('tickets.lista') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Volver a la Lista
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Ticket Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-ticket-perforated me-2"></i>Detalles del Ticket
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-{{ 
+                                'success' if ticket.estado in ['resuelto', 'cerrado'] 
+                                else 'warning' if ticket.estado in ['en_proceso', 'asignado_a_tecnico'] 
+                                else 'danger' if ticket.estado == 'esperando_respuesta_usuario'
+                                else 'secondary' 
+                            }} fs-6">
+                                {{ ticket.get_estado_display() }}
+                            </span>
+                            <span class="badge bg-{{ 
+                                'danger' if ticket.prioridad == 'critica' 
+                                else 'warning' if ticket.prioridad == 'alta' 
+                                else 'info' if ticket.prioridad == 'media' 
+                                else 'secondary' 
+                            }} fs-6">
+                                {{ ticket.get_prioridad_display() }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Categoría:</strong><br>
+                            <span class="badge bg-light text-dark">
+                                {{ MAIN_CATEGORIES[ticket.categoria].name if ticket.categoria in MAIN_CATEGORIES else ticket.categoria }}
+                            </span>
+                            {% if ticket.subcategoria %}
+                            <br><small class="text-muted">{{ ticket.subcategoria }}</small>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Origen:</strong><br>
+                            {% if ticket.origen == 'whatsapp' %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-whatsapp me-1"></i>WhatsApp
+                            </span>
+                            {% elif ticket.origen == 'portal' %}
+                            <span class="badge bg-primary">
+                                <i class="bi bi-globe me-1"></i>Portal Web
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ ticket.origen }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Descripción:</strong>
+                        <div class="mt-2 p-3 bg-light rounded">
+                            {{ ticket.descripcion | replace('\n', '<br>') | safe }}
+                        </div>
+                    </div>
+
+                    {% if ticket.datos_adicionales %}
+                    <div class="mb-3">
+                        <strong>Información Adicional:</strong>
+                        <div class="mt-2">
+                            {% for key, value in ticket.datos_adicionales.items() %}
+                            <div class="mb-1">
+                                <small class="text-muted">{{ key }}:</small> {{ value }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Timeline/Comments -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-chat-dots me-2"></i>Historial de Comunicación
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if comentarios %}
+                    <div class="timeline">
+                        {% for comentario in comentarios %}
+                        <div class="timeline-item mb-4">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <div class="timeline-marker bg-{{ 'primary' if comentario.autor.es_tecnico else 'success' }}">
+                                        <i class="bi bi-{{ 'person-gear' if comentario.autor.es_tecnico else 'person' }} text-white"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="card">
+                                        <div class="card-header py-2 {{ 'bg-light' if comentario.es_interno else '' }}">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>{{ comentario.autor.nombre }}</strong>
+                                                    <span class="badge bg-{{ 'primary' if comentario.autor.es_tecnico else 'success' }} ms-2">
+                                                        {{ 'Técnico' if comentario.autor.es_tecnico else 'Usuario' }}
+                                                    </span>
+                                                    {% if comentario.es_interno %}
+                                                    <span class="badge bg-warning ms-1">
+                                                        <i class="bi bi-eye-slash me-1"></i>Interno
+                                                    </span>
+                                                    {% endif %}
+                                                </div>
+                                                <small class="text-muted">
+                                                    {{ comentario.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="card-body py-2">
+                                            {{ comentario.contenido | replace('\n', '<br>') | safe }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-chat display-4 text-muted mb-3"></i>
+                        <p class="text-muted">No hay comentarios aún</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Add Comment Form -->
+                    {% if ticket.estado not in ['cerrado'] %}
+                    <div class="mt-4 pt-4 border-top">
+                        <h6>Agregar Comentario</h6>
+                        <form method="POST" action="{{ url_for('tickets.comentar', id=ticket.id) }}">
+                            <div class="mb-3">
+                                <textarea class="form-control" name="contenido" rows="3" 
+                                          placeholder="Escribe tu comentario aquí..." required></textarea>
+                            </div>
+                            {% if current_user.es_tecnico %}
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="es_interno" id="es_interno">
+                                    <label class="form-check-label" for="es_interno">
+                                        <i class="bi bi-eye-slash me-1"></i>Comentario interno (solo visible para técnicos)
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-2"></i>Enviar Comentario
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Ticket Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Información del Ticket
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Creado por:</strong><br>
+                        <div class="d-flex align-items-center mt-1">
+                            <i class="bi bi-person-circle me-2 text-primary"></i>
+                            <div>
+                                <div>{{ ticket.usuario.nombre }}</div>
+                                <small class="text-muted">{{ ticket.usuario.email }}</small>
+                                <br><small class="text-muted">{{ ticket.usuario.departamento }} - {{ ticket.usuario.cargo }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if ticket.tecnico %}
+                    <div class="mb-3">
+                        <strong>Técnico asignado:</strong><br>
+                        <div class="d-flex align-items-center mt-1">
+                            <i class="bi bi-person-gear me-2 text-success"></i>
+                            <div>
+                                <div>{{ ticket.tecnico.nombre }}</div>
+                                <small class="text-muted">{{ ticket.tecnico.email }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <strong>Fechas:</strong><br>
+                        <small class="text-muted">
+                            <i class="bi bi-calendar-plus me-1"></i>Creado: {{ ticket.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}<br>
+                            <i class="bi bi-calendar-event me-1"></i>Actualizado: {{ ticket.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') }}
+                            {% if ticket.fecha_cierre %}
+                            <br><i class="bi bi-calendar-check me-1"></i>Cerrado: {{ ticket.fecha_cierre.strftime('%d/%m/%Y %H:%M') }}
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions (for technicians) -->
+            {% if current_user.es_tecnico %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-tools me-2"></i>Acciones de Técnico
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('tickets.actualizar_estado', id=ticket.id) }}">
+                        <div class="mb-3">
+                            <label for="estado" class="form-label">Cambiar Estado</label>
+                            <select class="form-select" name="estado" id="estado">
+                                {% for estado in TICKET_STATES %}
+                                <option value="{{ estado }}" {% if ticket.estado == estado %}selected{% endif %}>
+                                    {% if estado == 'nuevo' %}Nuevo
+                                    {% elif estado == 'asignado_a_tecnico' %}Asignado a Técnico
+                                    {% elif estado == 'en_proceso' %}En Proceso
+                                    {% elif estado == 'esperando_aprobacion' %}Esperando Aprobación
+                                    {% elif estado == 'esperando_respuesta_usuario' %}Esperando Respuesta del Usuario
+                                    {% elif estado == 'resuelto' %}Resuelto
+                                    {% elif estado == 'cerrado' %}Cerrado
+                                    {% else %}{{ estado }}{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tecnico_asignado" class="form-label">Asignar Técnico</label>
+                            <select class="form-select" name="tecnico_asignado" id="tecnico_asignado">
+                                <option value="">Sin asignar</option>
+                                {% for tecnico in tecnicos %}
+                                <option value="{{ tecnico.id }}" {% if ticket.tecnico_id == tecnico.id %}selected{% endif %}>
+                                    {{ tecnico.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-check-circle me-2"></i>Actualizar Ticket
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-lightning me-2"></i>Acciones Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if ticket.categoria and ticket.subcategoria %}
+                        <a href="{{ url_for('knowledge.por_categoria', categoria=ticket.categoria) }}?subcategoria={{ ticket.subcategoria }}" 
+                           class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-book me-2"></i>Ver Artículos Relacionados
+                        </a>
+                        {% endif %}
+                        
+                        <a href="{{ url_for('tickets.nuevo') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-plus-circle me-2"></i>Crear Nuevo Ticket
+                        </a>
+                        
+                        {% if current_user.es_tecnico %}
+                        <a href="{{ url_for('tickets.lista') }}?categoria={{ ticket.categoria }}" 
+                           class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-funnel me-2"></i>Ver Tickets Similares
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline-marker {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.timeline-marker::after {
+    content: '';
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 30px;
+    background-color: #dee2e6;
+}
+
+.timeline-item:last-child .timeline-marker::after {
+    display: none;
+}
+
+.card-header.bg-light {
+    background-color: #f8f9fa !important;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.badge.fs-6 {
+    font-size: 0.875rem !important;
+}
+
+.timeline {
+    position: relative;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+</style>
+
+<script>
+// Auto-refresh para técnicos cada 30 segundos
+{% if current_user.es_tecnico %}
+setInterval(function() {
+    // Solo refrescar si no hay formularios siendo editados
+    const activeElement = document.activeElement;
+    if (!activeElement || (activeElement.tagName !== 'TEXTAREA' && activeElement.tagName !== 'INPUT')) {
+        location.reload();
+    }
+}, 30000);
+{% endif %}
+
+// Confirmación antes de cambiar estado crítico
+document.addEventListener('DOMContentLoaded', function() {
+    const estadoSelect = document.getElementById('estado');
+    if (estadoSelect) {
+        estadoSelect.addEventListener('change', function() {
+            if (this.value === 'cerrado') {
+                if (!confirm('¿Estás seguro de que quieres cerrar este ticket? Esta acción no se puede deshacer fácilmente.')) {
+                    this.value = '{{ ticket.estado }}';
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

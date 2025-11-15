@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Registrarse - FocusIT{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-person-plus-fill display-4 text-primary mb-3"></i>
+                        <h2 class="fw-bold">Crear Cuenta</h2>
+                        <p class="text-muted">Regístrate en FocusIT para acceder al soporte técnico</p>
+                    </div>
+
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nombre" class="form-label">Nombre Completo *</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" 
+                                       placeholder="Juan Pérez" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Correo Electrónico *</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       placeholder="juan.perez@optica.com" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" id="telefono" name="telefono" 
+                                       placeholder="+57 300 123 4567">
+                                <div class="form-text">
+                                    Incluye código de país para WhatsApp
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="departamento" class="form-label">Departamento *</label>
+                                <select class="form-select" id="departamento" name="departamento" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Administración">Administración</option>
+                                    <option value="Ventas">Ventas</option>
+                                    <option value="Optometría">Optometría</option>
+                                    <option value="Laboratorio">Laboratorio</option>
+                                    <option value="Contabilidad">Contabilidad</option>
+                                    <option value="Recursos Humanos">Recursos Humanos</option>
+                                    <option value="TI">Tecnología e Información</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="cargo" class="form-label">Cargo *</label>
+                            <input type="text" class="form-control" id="cargo" name="cargo" 
+                                   placeholder="Optómetra, Vendedor, Administrador, etc." required>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terminos" required>
+                                <label class="form-check-label" for="terminos">
+                                    Acepto los términos y condiciones de uso de FocusIT
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-person-check me-2"></i>Crear Cuenta
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <p class="text-muted mb-2">¿Ya tienes cuenta?</p>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+                        </a>
+                    </div>
+
+                    <!-- Info Box -->
+                    <div class="mt-4 p-3 bg-info bg-opacity-10 rounded">
+                        <h6 class="fw-bold text-info mb-2">
+                            <i class="bi bi-lightbulb me-1"></i>¿Sabías que...?
+                        </h6>
+                        <p class="small text-muted mb-0">
+                            Una vez registrado, podrás usar nuestro chatbot de WhatsApp para crear tickets 
+                            y recibir soporte técnico instantáneo.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    border-radius: 15px;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    padding: 12px 16px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.btn-lg {
+    padding: 12px 24px;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+.form-check-input:checked {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.bg-info.bg-opacity-10 {
+    background-color: rgba(13, 202, 240, 0.1) !important;
+}
+</style>
+{% endblock %}

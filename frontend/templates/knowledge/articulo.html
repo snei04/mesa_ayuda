@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}{{ articulo.titulo }} - Base de Conocimiento{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('knowledge.index') }}">Base de Conocimiento</a>
+                    </li>
+                    {% if articulo.categoria in MAIN_CATEGORIES %}
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('knowledge.por_categoria', categoria=articulo.categoria) }}">
+                            {{ MAIN_CATEGORIES[articulo.categoria].name }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="breadcrumb-item active" aria-current="page">{{ articulo.titulo }}</li>
+                </ol>
+            </nav>
+
+            <!-- Article -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h1 class="h3 mb-2">{{ articulo.titulo }}</h1>
+                            <div class="d-flex flex-wrap gap-2 mb-2">
+                                <span class="badge bg-{{ 
+                                    'danger' if articulo.categoria == 'problemas_tecnicos' 
+                                    else 'primary' if articulo.categoria == 'solicitudes_software' 
+                                    else 'warning' if articulo.categoria == 'permisos_accesos' 
+                                    else 'info' 
+                                }}">
+                                    {{ MAIN_CATEGORIES[articulo.categoria].name if articulo.categoria in MAIN_CATEGORIES else articulo.categoria }}
+                                </span>
+                                {% if articulo.subcategoria %}
+                                <span class="badge bg-light text-dark">{{ articulo.subcategoria }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-muted small">
+                                <i class="bi bi-person me-1"></i>Por {{ articulo.autor.nombre }} • 
+                                <i class="bi bi-calendar me-1"></i>{{ articulo.fecha_creacion.strftime('%d/%m/%Y') }} • 
+                                <i class="bi bi-eye me-1"></i>{{ articulo.vistas }} vistas
+                                {% if articulo.fecha_actualizacion != articulo.fecha_creacion %}
+                                • <i class="bi bi-pencil me-1"></i>Actualizado {{ articulo.fecha_actualizacion.strftime('%d/%m/%Y') }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if current_user.es_tecnico and (articulo.autor_id == current_user.id or current_user.email == 'admin@focusit.com') %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('knowledge.editar', id=articulo.id) }}">
+                                        <i class="bi bi-pencil me-2"></i>Editar
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="POST" action="{{ url_for('knowledge.eliminar', id=articulo.id) }}" 
+                                          onsubmit="return confirm('¿Estás seguro de que quieres eliminar este artículo?')">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-trash me-2"></i>Eliminar
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Article Content -->
+                    <div class="article-content">
+                        {{ articulo.contenido | replace('\n', '<br>') | safe }}
+                    </div>
+
+                    <!-- Keywords -->
+                    {% if articulo.palabras_clave %}
+                    <div class="mt-4 pt-4 border-top">
+                        <h6 class="text-muted mb-2">Palabras clave:</h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for palabra in articulo.palabras_clave.split(',') %}
+                            <span class="badge bg-light text-dark">{{ palabra.strip() }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">¿Te ayudó este artículo?</small>
+                        </div>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-success" onclick="rateArticle('helpful')">
+                                <i class="bi bi-hand-thumbs-up me-1"></i>Útil
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="rateArticle('not-helpful')">
+                                <i class="bi bi-hand-thumbs-down me-1"></i>No útil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feedback Message -->
+            <div id="feedbackMessage" class="alert alert-success mt-3" style="display: none;">
+                <i class="bi bi-check-circle me-2"></i>
+                <span id="feedbackText"></span>
+            </div>
+
+            <!-- Related Articles -->
+            {% if articulos_relacionados %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-link-45deg me-2"></i>Artículos Relacionados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for relacionado in articulos_relacionados %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <a href="{{ url_for('knowledge.articulo', id=relacionado.id) }}" 
+                                           class="text-decoration-none">
+                                            {{ relacionado.titulo }}
+                                        </a>
+                                    </h6>
+                                    <p class="card-text text-muted small">
+                                        {{ relacionado.contenido[:100] }}...
+                                    </p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-eye me-1"></i>{{ relacionado.vistas }} vistas
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-lightning me-2"></i>¿Necesitas más ayuda?
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-3">
+                        Si este artículo no resolvió tu problema, puedes crear un ticket de soporte.
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('tickets.flujo_guiado', categoria=articulo.categoria, subcategoria=articulo.subcategoria) }}" 
+                           class="btn btn-primary btn-sm">
+                            <i class="bi bi-diagram-3 me-2"></i>Flujo Guiado
+                        </a>
+                        <a href="{{ url_for('tickets.nuevo') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-ticket me-2"></i>Crear Ticket
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table of Contents (if article is long) -->
+            <div class="card mb-4" id="tocCard" style="display: none;">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-list-ol me-2"></i>Contenido
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="tableOfContents"></div>
+                </div>
+            </div>
+
+            <!-- Share -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-share me-2"></i>Compartir
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyLink()">
+                            <i class="bi bi-link me-2"></i>Copiar Enlace
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="shareWhatsApp()">
+                            <i class="bi bi-whatsapp me-2"></i>Compartir por WhatsApp
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Article Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Información del Artículo
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>Autor:</strong><br>
+                        <small class="text-muted">{{ articulo.autor.nombre }}</small>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Creado:</strong><br>
+                        <small class="text-muted">{{ articulo.fecha_creacion.strftime('%d de %B de %Y') }}</small>
+                    </div>
+                    {% if articulo.fecha_actualizacion != articulo.fecha_creacion %}
+                    <div class="mb-2">
+                        <strong>Última actualización:</strong><br>
+                        <small class="text-muted">{{ articulo.fecha_actualizacion.strftime('%d de %B de %Y') }}</small>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <strong>Vistas:</strong><br>
+                        <small class="text-muted">{{ articulo.vistas }} visualizaciones</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.article-content {
+    font-size: 1.1rem;
+    line-height: 1.7;
+}
+
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.article-content p {
+    margin-bottom: 1rem;
+}
+
+.article-content ul,
+.article-content ol {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+}
+
+.article-content li {
+    margin-bottom: 0.5rem;
+}
+
+.article-content code {
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+}
+
+.article-content pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+}
+
+.article-content blockquote {
+    border-left: 4px solid #007bff;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+    color: #6c757d;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: ">";
+}
+
+#tableOfContents a {
+    text-decoration: none;
+    color: #6c757d;
+    display: block;
+    padding: 0.25rem 0;
+    border-left: 2px solid transparent;
+    padding-left: 0.5rem;
+}
+
+#tableOfContents a:hover,
+#tableOfContents a.active {
+    color: #007bff;
+    border-left-color: #007bff;
+}
+</style>
+
+<script>
+function rateArticle(rating) {
+    const feedbackMessage = document.getElementById('feedbackMessage');
+    const feedbackText = document.getElementById('feedbackText');
+    
+    if (rating === 'helpful') {
+        feedbackText.textContent = '¡Gracias! Nos alegra saber que este artículo te fue útil.';
+        feedbackMessage.className = 'alert alert-success mt-3';
+    } else {
+        feedbackText.textContent = 'Gracias por tu feedback. Trabajaremos para mejorar este artículo.';
+        feedbackMessage.className = 'alert alert-warning mt-3';
+    }
+    
+    feedbackMessage.style.display = 'block';
+    
+    // Ocultar después de 5 segundos
+    setTimeout(() => {
+        feedbackMessage.style.display = 'none';
+    }, 5000);
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check me-2"></i>¡Copiado!';
+        btn.classList.remove('btn-outline-primary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-primary');
+        }, 2000);
+    });
+}
+
+function shareWhatsApp() {
+    const text = `Te comparto este artículo útil: ${document.title}\n${window.location.href}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+}
+
+// Generate table of contents for long articles
+document.addEventListener('DOMContentLoaded', function() {
+    const content = document.querySelector('.article-content');
+    const headings = content.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    
+    if (headings.length > 3) {
+        const toc = document.getElementById('tableOfContents');
+        const tocCard = document.getElementById('tocCard');
+        
+        headings.forEach((heading, index) => {
+            // Add ID to heading if it doesn't have one
+            if (!heading.id) {
+                heading.id = `heading-${index}`;
+            }
+            
+            // Create TOC link
+            const link = document.createElement('a');
+            link.href = `#${heading.id}`;
+            link.textContent = heading.textContent;
+            link.style.paddingLeft = `${(parseInt(heading.tagName.charAt(1)) - 1) * 0.5}rem`;
+            
+            toc.appendChild(link);
+        });
+        
+        tocCard.style.display = 'block';
+        
+        // Smooth scrolling for TOC links
+        toc.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A') {
+                e.preventDefault();
+                const targetId = e.target.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}FocusIT - Bienvenido{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row align-items-center min-vh-75">
+        <div class="col-lg-6">
+            <div class="hero-content">
+                <h1 class="display-4 fw-bold text-primary mb-4">
+                    <i class="bi bi-eye-fill me-3"></i>FocusIT
+                </h1>
+                <h2 class="h3 text-secondary mb-4">Mesa de Ayuda Inteligente para Ópticas</h2>
+                <p class="lead text-muted mb-4">
+                    Resuelve tus problemas técnicos de forma rápida y eficiente con nuestro sistema de soporte guiado.
+                </p>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-4 me-md-2">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg px-4">
+                        <i class="bi bi-person-plus me-2"></i>Registrarse
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="hero-image text-center">
+                <div class="bg-light rounded-3 p-5">
+                    <i class="bi bi-headset display-1 text-primary mb-3"></i>
+                    <h4 class="text-secondary">Soporte 24/7</h4>
+                    <p class="text-muted">Nuestro asistente virtual está siempre disponible para ayudarte</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2 class="text-center mb-5">¿Por qué elegir FocusIT?</h2>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-diagram-3 display-4 text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Flujo Guiado</h5>
+                    <p class="card-text text-muted">
+                        Nuestro sistema te guía paso a paso para identificar y resolver tu problema de manera eficiente.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-robot display-4 text-success"></i>
+                    </div>
+                    <h5 class="card-title">Asistente Virtual</h5>
+                    <p class="card-text text-muted">
+                        VisioBot, nuestro chatbot inteligente, está disponible 24/7 para resolver tus consultas inmediatamente.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-book display-4 text-info"></i>
+                    </div>
+                    <h5 class="card-title">Base de Conocimiento</h5>
+                    <p class="card-text text-muted">
+                        Accede a una amplia biblioteca de soluciones y tutoriales específicos para ópticas.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Process Section -->
+    <div class="row mt-5 py-5 bg-light rounded-3">
+        <div class="col-12">
+            <h2 class="text-center mb-5">¿Cómo funciona?</h2>
+        </div>
+        
+        <div class="col-md-3 text-center mb-4">
+            <div class="process-step">
+                <div class="step-number bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <span class="fw-bold">1</span>
+                </div>
+                <h6>Describe tu problema</h6>
+                <p class="text-muted small">Nuestro sistema te guía para categorizar tu consulta</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 text-center mb-4">
+            <div class="process-step">
+                <div class="step-number bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <span class="fw-bold">2</span>
+                </div>
+                <h6>Busca soluciones</h6>
+                <p class="text-muted small">Revisa nuestra base de conocimiento para soluciones rápidas</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 text-center mb-4">
+            <div class="process-step">
+                <div class="step-number bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <span class="fw-bold">3</span>
+                </div>
+                <h6>Crea un ticket</h6>
+                <p class="text-muted small">Si no encuentras la solución, creamos un ticket automáticamente</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 text-center mb-4">
+            <div class="process-step">
+                <div class="step-number bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <span class="fw-bold">4</span>
+                </div>
+                <h6>Recibe soporte</h6>
+                <p class="text-muted small">Un técnico especializado te contacta para resolver tu problema</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="row mt-5 py-5">
+        <div class="col-12 text-center">
+            <h2 class="mb-4">¿Listo para mejorar tu experiencia de soporte?</h2>
+            <p class="lead text-muted mb-4">
+                Únete a FocusIT y experimenta un soporte técnico más eficiente y personalizado.
+            </p>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-5">
+                <i class="bi bi-rocket-takeoff me-2"></i>Comenzar Ahora
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.min-vh-75 {
+    min-height: 75vh;
+}
+
+.hero-content {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.hero-image {
+    animation: fadeInRight 0.8s ease-out 0.2s both;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.process-step {
+    position: relative;
+}
+
+.process-step::after {
+    content: '';
+    position: absolute;
+    top: 30px;
+    right: -50%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, #007bff, transparent);
+    z-index: -1;
+}
+
+.process-step:last-child::after {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .process-step::after {
+        display: none;
+    }
+}
+</style>
+{% endblock %}
