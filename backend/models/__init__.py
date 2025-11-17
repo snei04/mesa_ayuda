@@ -110,6 +110,14 @@ class BaseConocimiento(db.Model):
         self.vistas += 1
         db.session.commit()
 
+
+class HistorialChat(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sesion_id = db.Column(db.Integer, db.ForeignKey('sesiones_chatbot.id'))
+    emisor = db.Column(db.String(10)) # 'usuario' o 'bot'
+    mensaje = db.Column(db.Text)
+    fecha = db.Column(db.DateTime, default=datetime.utcnow)
+
 class SesionChatbot(db.Model):
     __tablename__ = 'sesiones_chatbot'
     
@@ -124,3 +132,6 @@ class SesionChatbot(db.Model):
     
     def __repr__(self):
         return f'<Sesión Chatbot {self.usuario_telefono}>'
+
+
+        
