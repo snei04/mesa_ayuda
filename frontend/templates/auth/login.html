@@ -14,54 +14,61 @@
                         <p class="text-muted">Accede a tu cuenta de FocusIT</p>
                     </div>
 
-                    <form method="POST">
+                    <form method="POST" action="{{ url_for('auth.login') }}">
                         <div class="mb-3">
                             <label for="email" class="form-label">Correo Electrónico</label>
                             <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-envelope"></i>
-                                </span>
-                                <input type="email" class="form-control" id="email" name="email" 
-                                       placeholder="tu.email@optica.com" required>
+                                <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="nombre@imevisas.com" required>
                             </div>
-                            <div class="form-text">
-                                Usa tu correo corporativo de la óptica
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Contraseña</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Tu contraseña" required>
                             </div>
                         </div>
 
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
                             </button>
                         </div>
                     </form>
+                    
+                    <div class="text-center my-3 position-relative">
+                        <hr class="hr-text" data-content="O">
+                    </div>
 
-                    <hr class="my-4">
+                    <!-- Magic Link Section -->
+                    <div class="text-center mb-3">
+                        <p class="small text-muted mb-2">¿Olvidaste tu contraseña?</p>
+                        <button class="btn btn-outline-info w-100" type="button" data-bs-toggle="collapse" data-bs-target="#magicLinkCollapse">
+                            <i class="bi bi-magic me-2"></i>Ingresar con Enlace Mágico
+                        </button>
+                    </div>
+                    
+                    <div class="collapse mb-3" id="magicLinkCollapse">
+                        <div class="card card-body bg-light border-0 p-3">
+                            <p class="small text-muted mb-2">Te enviaremos un enlace de acceso a tu correo.</p>
+                            <form method="POST" action="{{ url_for('auth.request_magic_link') }}">
+                                <div class="input-group mb-2">
+                                    <input type="email" class="form-control form-control-sm" name="email" placeholder="Tu correo" required>
+                                    <button class="btn btn-info btn-sm text-white" type="submit">Enviar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
 
-                    <div class="text-center">
+                    <div class="text-center border-top pt-3">
                         <p class="text-muted mb-2">¿No tienes cuenta?</p>
                         <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary">
                             <i class="bi bi-person-plus me-2"></i>Registrarse
                         </a>
                     </div>
-
-                    <!-- Demo Users Info -->
-                    <div class="mt-4 p-3 bg-light rounded">
-                        <h6 class="fw-bold text-muted mb-2">
-                            <i class="bi bi-info-circle me-1"></i>Usuarios de Prueba
-                        </h6>
-                        <div class="small text-muted">
-                            <div class="mb-1">
-                                <strong>Admin:</strong> admin@focusit.com
-                            </div>
-                            <div class="mb-1">
-                                <strong>Técnico:</strong> tecnico1@focusit.com
-                            </div>
-                            <div>
-                                <strong>Usuario:</strong> usuario@optica.com
-                            </div>
-                        </div>
-                    </div>
+                    
                 </div>
             </div>
         </div>

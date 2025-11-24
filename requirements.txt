@@ -7,4 +7,6 @@ Werkzeug==2.3.7
 python-dotenv==1.0.0
 requests==2.31.0
 spacy==3.7.5
-spacy-spanish==3.7.0
+# spacy-spanish==3.7.0 (Paquete no encontrado, usar 'python -m spacy download es_core_news_sm')
+psycopg2-binary==2.9.11
+PyJWT==2.8.0

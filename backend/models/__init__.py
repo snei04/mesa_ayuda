@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
@@ -10,6 +11,7 @@ class Usuario(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=True) # Nuevo campo contraseña
     telefono = db.Column(db.String(20), nullable=True)
     departamento = db.Column(db.String(50), nullable=True)
     cargo = db.Column(db.String(50), nullable=True)
@@ -21,6 +23,14 @@ class Usuario(UserMixin, db.Model):
     tickets_creados = db.relationship('Ticket', foreign_keys='Ticket.usuario_id', backref='usuario', lazy='dynamic')
     tickets_asignados = db.relationship('Ticket', foreign_keys='Ticket.tecnico_id', backref='tecnico', lazy='dynamic')
     comentarios = db.relationship('ComentarioTicket', backref='autor', lazy='dynamic')
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+        
+    def check_password(self, password):
+        if not self.password_hash:
+            return False
+        return check_password_hash(self.password_hash, password)
     
     def __repr__(self):
         return f'<Usuario {self.nombre}>'
@@ -102,6 +112,7 @@ class BaseConocimiento(db.Model):
     
     # Relaciones
     autor = db.relationship('Usuario', backref='articulos_conocimiento')
+    pasos = db.relationship('PasoGuia', backref='articulo', lazy='dynamic', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<Artículo {self.titulo}>'
@@ -109,6 +120,20 @@ class BaseConocimiento(db.Model):
     def incrementar_vistas(self):
         self.vistas += 1
         db.session.commit()
+
+class PasoGuia(db.Model):
+    __tablename__ = 'pasos_guia'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    articulo_id = db.Column(db.Integer, db.ForeignKey('base_conocimiento.id'), nullable=False)
+    orden = db.Column(db.Integer, nullable=False)
+    titulo = db.Column(db.String(200), nullable=True)
+    contenido = db.Column(db.Text, nullable=True)
+    imagen_url = db.Column(db.String(500), nullable=True)
+    
+    def __repr__(self):
+        return f'<Paso {self.orden} del Artículo {self.articulo_id}>'
+
 
 
 class HistorialChat(db.Model):

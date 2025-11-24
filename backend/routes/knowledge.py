@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import desc, or_
-from models import db, BaseConocimiento
+from models import db, BaseConocimiento, PasoGuia
 from config import Config
 
 knowledge_bp = Blueprint('knowledge', __name__)
+
+# ... (código existente hasta la función crear)
 
 @knowledge_bp.route('/')
 @login_required
@@ -75,12 +77,15 @@ def articulo(id):
                          articulos_relacionados=articulos_relacionados)
 
 @knowledge_bp.route('/crear', methods=['GET', 'POST'])
+
 @login_required
 def crear():
     if not current_user.es_tecnico:
         flash('Solo los técnicos pueden crear artículos de conocimiento', 'error')
         return redirect(url_for('knowledge.index'))
     
+    categoria_preseleccionada = request.args.get('categoria', '')
+
     if request.method == 'POST':
         titulo = request.form.get('titulo')
         contenido = request.form.get('contenido')
@@ -91,7 +96,7 @@ def crear():
         # Validaciones
         if not all([titulo, contenido, categoria]):
             flash('Por favor completa todos los campos obligatorios', 'error')
-            return render_template('knowledge/crear.html')
+            return render_template('knowledge/crear.html', categoria_preseleccionada=categoria)
         
         # Crear artículo
         nuevo_articulo = BaseConocimiento(
@@ -105,12 +110,32 @@ def crear():
         )
         
         db.session.add(nuevo_articulo)
+        db.session.flush() # Para obtener el ID del artículo
+
+        # Procesar Pasos Guiados
+        pasos_titulos = request.form.getlist('paso_titulo[]')
+        pasos_contenidos = request.form.getlist('paso_contenido[]')
+        pasos_imagenes = request.form.getlist('paso_imagen[]') # Por ahora URL, luego upload real
+
+        for i in range(len(pasos_titulos)):
+            if pasos_titulos[i].strip(): # Solo si tiene título
+                nuevo_paso = PasoGuia(
+                    articulo_id=nuevo_articulo.id,
+                    orden=i + 1,
+                    titulo=pasos_titulos[i],
+                    contenido=pasos_contenidos[i] if i < len(pasos_contenidos) else "",
+                    imagen_url=pasos_imagenes[i] if i < len(pasos_imagenes) else ""
+                )
+                db.session.add(nuevo_paso)
+        
         db.session.commit()
         
         flash('Artículo creado exitosamente', 'success')
         return redirect(url_for('knowledge.articulo', id=nuevo_articulo.id))
     
-    return render_template('knowledge/crear.html')
+    return render_template('knowledge/crear.html', categoria_preseleccionada=categoria_preseleccionada)
+
+# ... (resto del código)
 
 @knowledge_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
 @login_required

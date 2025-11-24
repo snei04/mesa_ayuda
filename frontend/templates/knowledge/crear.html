@@ -131,25 +131,14 @@
                                         <small class="text-muted">Palabras clave: </small>
                                         <span id="preview-palabras-content"></span>
                                     </div>
-                                </div>
-                            </div>
                         </div>
 
                         <!-- Botones -->
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <button type="button" class="btn btn-outline-info" onclick="guardarBorrador()">
-                                    <i class="bi bi-save me-2"></i>Guardar Borrador
-                                </button>
-                            </div>
-                            <div>
-                                <button type="button" class="btn btn-outline-secondary me-2" onclick="limpiarFormulario()">
-                                    <i class="bi bi-arrow-clockwise me-2"></i>Limpiar
-                                </button>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check-circle me-2"></i>Publicar Artículo
-                                </button>
-                            </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-save me-2"></i>Publicar Artículo
+                            </button>
+                            <a href="{{ url_for('knowledge.index') }}" class="btn btn-light">Cancelar</a>
                         </div>
                     </form>
                 </div>

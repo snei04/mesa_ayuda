@@ -61,6 +61,13 @@ def create_app():
             'TICKET_PRIORITIES': Config.TICKET_PRIORITIES
         }
     
+    # Filtros personalizados
+    @app.template_filter('nl2br')
+    def nl2br_filter(s):
+        if not s:
+            return ""
+        return s.replace('\n', '<br>')
+    
     # Manejo de errores centralizado para API
     from utils.api_response import APIResponse, APIError
     

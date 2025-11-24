@@ -514,8 +514,9 @@ def webhook():
                 from_number = message['from']
                 message_text = message['text']['body']
                 response = procesar_mensaje_whatsapp(from_number, message_text)
-                # TODO: Enviar respuesta usando WhatsApp Business API
-                # enviar_mensaje_whatsapp(from_number, response)
+                
+                # Enviar respuesta usando WhatsApp Business API
+                WhatsAppClient.enviar_mensaje(from_number, response)
                 
         except Exception as e:
             print(f"Error procesando webhook: {e}")

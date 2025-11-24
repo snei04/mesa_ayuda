@@ -11,6 +11,7 @@ class Config:
     # WhatsApp Business API Configuration
     WHATSAPP_TOKEN = os.environ.get('WHATSAPP_TOKEN')
     WHATSAPP_VERIFY_TOKEN = os.environ.get('WHATSAPP_VERIFY_TOKEN')
+    WHATSAPP_PHONE_NUMBER_ID = os.environ.get('WHATSAPP_PHONE_NUMBER_ID')
     
     # Estados de tickets definidos
     TICKET_STATES = [
